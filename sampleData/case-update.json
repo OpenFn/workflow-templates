@@ -1,0 +1,60 @@
+{
+  "attachments": {},
+  "case_id": "6d915ea7caa2",
+  "closed": false,
+  "date_closed": null,
+  "date_modified": "2022-11-10T08:09:29.803000Z",
+  "domain": "community",
+  "indices": {
+    "parent": {
+      "case_id": "6ee8c1b63530",
+      "case_type": "Household",
+      "relationship": "child"
+    }
+  },
+  "properties": {
+    "app_release": "Q2-2022",
+    "case_type": "Person",
+    "ANC_1": "2022-11-02",
+    "last_form_opened_date": "2022-11-10",
+    "area_name": "Test Area",
+    "catchment": "Nairobi",
+    "date_opened": "2022-11-10T08:09:29.803",
+    "sfid": "mqtyjAAA",
+    "relation_to_hh": "child",
+    "head_of_household": "no",
+    "LMP": "2022-07-14",
+    "catchment_name": "Nairobi",
+    "head_of_household_case_id": "",
+    "Person_Name": "M",
+    "age": "",
+    "Record_Type": "Unborn",
+    "Client_Status": "Active",
+    "village_name": "A&B",
+    "data_sharing_consent": "yes",
+    "county_name": "Nairobi",
+    "sub-county_name": "Nairobi",
+    "Check_Unborn_Child": "Yes",
+    "EDD": "2023-04-20",
+    "last_form_opened_date_and_time": "2022-11-10-11:07:28",
+    "MOH": "Yes",
+    "test_user": "",
+    "commcare_location_id": "161fbf8910f562",
+    "CHW_ID": "mqtyjAAA",
+    "commcare_username": "caroline",
+    "owner_id": "d211dc52058e40419b161fbf8910f562",
+    "mother_name": "M",
+    "mother_case_id": "3fdf0d30c6f3",
+    "case_name": "M",
+    "Child_Status": "Unborn",
+    "last_form_opened_name": "Enroll Person",
+    "complete_ANCs": "No",
+    "external_id": null,
+    "area": "DAA2"
+  },
+  "server_date_modified": "2022-11-10T08:20:49.570079Z",
+  "user_id": "977b86b9110b3c60627",
+  "xform_ids": [
+    "f7082c4a3edf"
+  ]
+}
