@@ -5,7 +5,7 @@ fn(state => {
   } else {
     people.push(state.data);
   }
-    console.log(people);
+  console.log("Incoming cases:", people);
 
   return {
     ...state,
@@ -30,7 +30,7 @@ each(
           "total": primeroCase.total
       };
     data["total_number_of_boys_and_girls_in_family_e6c9373"]  = boys_and_girls;
-    console.log('Upserting case', JSON.stringify(data, null, 2));
+    console.log('Upserting case to Primero', JSON.stringify(data, null, 2));
     return upsertCase({
       externalIds: ['record_id'],
       data,
