@@ -1,4 +1,4 @@
-alterState(state => {
+fn(state => {
   let people = [];
   if (Array.isArray(state.data)) {
     people = Array.from(state.data);
@@ -15,7 +15,7 @@ alterState(state => {
   
 each(
     '$.people[*]', 
-    alterState(state => {
+    fn(state => {
       const primeroCase = state.data;
 
       let data = {
