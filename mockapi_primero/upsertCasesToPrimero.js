@@ -17,20 +17,20 @@ fn(state => {
 // Iterate through cases, upsert to Primero
 each(
   '$.people[*]',
-  upsertCase({ externalIds: ['record_id'] }, state => {
+  upsertCase({ externalIds: ['id'], data: state => {
     const { data } = state;
     const primeroCase = {
-      record_id: data.case_id,
+      id: data.record_id,
       ethnicity: [data.ethnicity],
       nationality: [data.nationality],
       // this is the number of boys and girls in the family
-      boys_and_girls: {
-        boys_333245: primeroCase.boys,
-        girls_895184: primeroCase.girls,
-        total: primeroCase.total,
+      total_number_of_boys_and_girls_in_family_e6c9373: {
+        boys_333245: data.boys,
+        girls_895184: data.girls,
+        total: data.total,
       },
     };
     console.log('Upserting case to Primero:', primeroCase);
     return primeroCase;
-  })
+  }})
 );
