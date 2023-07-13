@@ -1,11 +1,19 @@
 fn(state => {
   console.log(state.response.data.results);
   const submissions = state.response.data.results;
-  const submission = submissions.slice(0)[0];
-  return { ...state, submission };
+  // const submission = submissions.slice(0)[0];
+  return { ...state, submissions };
 });
 
 if (state.submission) {
+  const aggregateValues = (key) => {
+      return submissions.reduce((totalSum, submission) => {
+        if (submission.body && submission.body[key]) {
+          return totalSum + parseInt(submission.body[key]);
+        }
+        return totalSum;
+      }, 0);
+    };
 //Load datavalue sets using DHIS2's version of "UPSERT", using "importStrategy: 'CREATE_AND_UPDATE' by default`)
   create("dataValueSets", {
     dataSet: "QX4ZTUbOt3a", //Reproductive health
