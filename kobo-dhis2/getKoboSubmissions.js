@@ -1,13 +1,11 @@
 fn(state => {
   console.log('Current cursor value:', state.lastEnd);
-
+  //TODO: Explain cursors in the code (quick explanation --> OR point to Docs)
   // IF YOU CLEAR STATE...
   // Set this manual cursor to the earliest submission date you want fetch.
   const manualCursor = '2022-05-01T14:32:43.325+01:00';
   state.data = {
-    surveys: [
-    //==== GRIEVENCES FORM ===============//
-     
+    surveys: [     
      {
        uid: 'a6z4FqgqgXzSoauoKZPAbj',
        formName: 'ANC test form', // ANC test form
