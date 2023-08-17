@@ -5,8 +5,10 @@ fn(state => {
   return { ...state, submissions };
 });
 
-if (state.submission) {
-  const aggregateValues = (key) => {
+if (state.submissions) {
+//Load datavalue sets using DHIS2's version of "UPSERT", using "importStrategy: 'CREATE_AND_UPDATE' by default`)
+
+    const aggregateValues = (key) => {
       return submissions.reduce((totalSum, submission) => {
         if (submission.body && submission.body[key]) {
           return totalSum + parseInt(submission.body[key]);
@@ -14,7 +16,8 @@ if (state.submission) {
         return totalSum;
       }, 0);
     };
-//Load datavalue sets using DHIS2's version of "UPSERT", using "importStrategy: 'CREATE_AND_UPDATE' by default`)
+// Eg: aggregateValues("ANC1")
+
   create("dataValueSets", {
     dataSet: "QX4ZTUbOt3a", //Reproductive health
     completeDate: new Date().toISOString().split('T')[0], //Today's date in YYYY-MM-DD format
@@ -23,20 +26,18 @@ if (state.submission) {
     dataValues: [
       {
         dataElement: "fbfJHSPpUQD", //ANC 1st Visit
-        // value: 7
-        value: state => parseInt(state.submission.ANC1),
-        
+        value: aggregateValues("ANC1"),
         categoryOptionCombo: "pq2XI5kz2BY" // Fixed
         },
       {
         dataElement: "cYeuwXTCPkU", //ANC 2nd Visit
-        value: state => parseInt(state.submission.ANC_2nd_Visit),
+        value: aggregateValues("ANC_2nd_Visit"),
         categoryOptionCombo: "pq2XI5kz2BY"
 
       },
       {
         dataElement: "Jtf34kNZhzP", //ANC 3rd Visit
-        value: state => parseInt(state.submission.ANC_3rd_Visit),
+        value: aggregateValues("ANC_3rd_Visit"),
         categoryOptionCombo: "pq2XI5kz2BY"
 
       }
@@ -44,4 +45,5 @@ if (state.submission) {
   })
 } else {
   console.log("No new submissions were found.")
-};
+}
+;
