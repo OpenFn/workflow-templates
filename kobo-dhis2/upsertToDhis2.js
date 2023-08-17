@@ -1,13 +1,11 @@
 fn(state => {
   console.log(state.response.data.results);
   const submissions = state.response.data.results;
-  // const submission = submissions.slice(0)[0];
   return { ...state, submissions };
 });
 
 if (state.submissions) {
-//Load datavalue sets using DHIS2's version of "UPSERT", using "importStrategy: 'CREATE_AND_UPDATE' by default`)
-
+//We will sum up response values across submssion using this
     const aggregateValues = (key) => {
       return submissions.reduce((totalSum, submission) => {
         if (submission.body && submission.body[key]) {
@@ -18,6 +16,8 @@ if (state.submissions) {
     };
 // Eg: aggregateValues("ANC1")
 
+//Load datavalue sets using DHIS2's version of "UPSERT", using "importStrategy: 'CREATE_AND_UPDATE' by default`)
+
   create("dataValueSets", {
     dataSet: "QX4ZTUbOt3a", //Reproductive health
     completeDate: new Date().toISOString().split('T')[0], //Today's date in YYYY-MM-DD format
@@ -26,7 +26,7 @@ if (state.submissions) {
     dataValues: [
       {
         dataElement: "fbfJHSPpUQD", //ANC 1st Visit
-        value: aggregateValues("ANC1"),
+        value: aggregateValues("ANC1"), //Summed values of responses to "ANC1" question across submissions
         categoryOptionCombo: "pq2XI5kz2BY" // Fixed
         },
       {
