@@ -1,0 +1,698 @@
+{
+  "id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+  "name": "demo-project",
+  "description": "for ak",
+  "inserted_at": "2023-03-10T15:54:14",
+  "updated_at": "2024-03-26T13:44:55",
+  "scheduled_deletion": null,
+  "history_retention_period": 30,
+  "dataclip_retention_period": null,
+  "requires_mfa": false,
+  "retention_policy": "retain_all",
+  "workflows": {
+    "OpenMRS-to-DHIS2": {
+      "id": "a78679c9-6663-499b-ab8f-31531e154e19",
+      "name": "OpenMRS-to-DHIS2",
+      "inserted_at": "2023-03-10T15:54:27",
+      "updated_at": "2023-11-28T10:47:48",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "5519d4b9-6295-4be1-9226-ae0a1eb36576",
+          "type": "cron",
+          "cron_expression": "07 * * * *"
+        }
+      },
+      "jobs": {
+        "Fetch-OpenMRS-data": {
+          "id": "08c63db7-1a56-47f9-a40d-a3b3657071db",
+          "name": "Fetch OpenMRS data",
+          "body": "fn(state => state);\n",
+          "adaptor": "@openfn/language-openmrs@2.0.8"
+        },
+        "Convert-to-FHIR-patient-data-standard": {
+          "id": "df9e605d-afa8-469f-a302-a7b8d612fc61",
+          "name": "Convert to FHIR patient data standard",
+          "body": "// Get started by adding operations from your adaptor here",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "Load-to-national-DHIS2-system": {
+          "id": "3d86db04-c2c4-400d-b52c-76f9c8e0dd1d",
+          "name": "Load to national DHIS2 system",
+          "body": "// Get started by adding operations from your adaptor here\nfn(state => {\n    console.log(\"Logging in to DHIS2...\")\n    console.log(\"Upserting anonymized patient data...\")\n    console.log(\"Updating clinics and clinic report dates...\")\n    return state;\n})",
+          "adaptor": "@openfn/language-dhis2@latest"
+        },
+        "Add-to-COVID-19-hotspot-map": {
+          "id": "a095e5dd-bff0-44fa-b32d-d9f107431901",
+          "name": "Add to COVID-19 hotspot map",
+          "body": "// Get started by adding operations from your adaptor here",
+          "adaptor": "@openfn/language-cartodb@latest"
+        },
+        "Notify-clinic-admin-for-retry": {
+          "id": "1961a1ee-d9f3-4007-8bdd-263830ee3883",
+          "name": "Notify clinic admin for retry",
+          "body": "// Get started by adding operations from your adaptor here",
+          "adaptor": "@openfn/language-twilio@latest"
+        },
+        "Request-shipments-for-low-stock-items-at-clinic": {
+          "id": "109a7355-223c-45ca-ad3c-bc063dee6a24",
+          "name": "Request shipments for low stock items at clinic",
+          "body": "// Get started by adding operations from your adaptor here",
+          "adaptor": "@openfn/language-http@latest"
+        }
+      },
+      "edges": {
+        "cron->Fetch-OpenMRS-data": {
+          "enabled": true,
+          "id": "20accd04-b38f-4f07-b7e4-59754e0ac33a",
+          "source_trigger_id": "5519d4b9-6295-4be1-9226-ae0a1eb36576",
+          "condition_type": "always",
+          "target_job_id": "08c63db7-1a56-47f9-a40d-a3b3657071db"
+        },
+        "Fetch-OpenMRS-data->Convert-to-FHIR-patient-data-standard": {
+          "enabled": true,
+          "id": "235e22f6-d56d-4fbd-9e1d-9a1fdb186bbe",
+          "source_job_id": "08c63db7-1a56-47f9-a40d-a3b3657071db",
+          "condition_type": "on_job_success",
+          "target_job_id": "df9e605d-afa8-469f-a302-a7b8d612fc61"
+        },
+        "Convert-to-FHIR-patient-data-standard->Load-to-national-DHIS2-system": {
+          "enabled": true,
+          "id": "0a160eea-3abc-4e05-a3ab-021aef5c0273",
+          "source_job_id": "df9e605d-afa8-469f-a302-a7b8d612fc61",
+          "condition_type": "on_job_success",
+          "target_job_id": "3d86db04-c2c4-400d-b52c-76f9c8e0dd1d"
+        },
+        "Convert-to-FHIR-patient-data-standard->Add-to-COVID-19-hotspot-map": {
+          "enabled": true,
+          "id": "0e4d7db0-3b41-4030-9d48-68363b2066de",
+          "source_job_id": "df9e605d-afa8-469f-a302-a7b8d612fc61",
+          "condition_type": "on_job_success",
+          "target_job_id": "a095e5dd-bff0-44fa-b32d-d9f107431901"
+        },
+        "Load-to-national-DHIS2-system->Notify-clinic-admin-for-retry": {
+          "enabled": true,
+          "id": "dbb03612-0765-4077-9ffc-b0f8f756fc03",
+          "source_job_id": "3d86db04-c2c4-400d-b52c-76f9c8e0dd1d",
+          "condition_type": "on_job_failure",
+          "target_job_id": "1961a1ee-d9f3-4007-8bdd-263830ee3883"
+        },
+        "Load-to-national-DHIS2-system->Request-shipments-for-low-stock-items-at-clinic": {
+          "enabled": true,
+          "id": "c30d56f5-88d3-4e4b-9209-bc515905e58b",
+          "source_job_id": "3d86db04-c2c4-400d-b52c-76f9c8e0dd1d",
+          "condition_type": "on_job_success",
+          "target_job_id": "109a7355-223c-45ca-ad3c-bc063dee6a24"
+        }
+      }
+    },
+    "Setup-OpenMRS-from-DHIS2": {
+      "id": "3ed97198-8991-4962-ba7b-864c04e04225",
+      "name": "Setup OpenMRS from DHIS2",
+      "inserted_at": "2023-03-10T15:56:21",
+      "updated_at": "2023-05-02T05:09:50",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": "2023-05-02T05:09:50Z",
+      "triggers": {},
+      "jobs": {},
+      "edges": {}
+    },
+    "Sync-HIS-data": {
+      "id": "9f6f4e89-3e12-4e0d-aebf-c39f4f347fd4",
+      "name": "Sync HIS data",
+      "inserted_at": "2023-05-02T08:18:55",
+      "updated_at": "2023-05-02T08:19:45",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "35f555f0-e14c-4e61-b043-116f7de757bb",
+          "type": "cron",
+          "cron_expression": "00 06 * * *"
+        }
+      },
+      "jobs": {
+        "Get-patient-data-from-HIS": {
+          "id": "4ef97c8e-8120-4239-83d0-37001ea411fb",
+          "name": "Get patient data from HIS",
+          "body": "// Get started by adding operations from your adaptor here",
+          "adaptor": "@openfn/language-postgresql@latest"
+        }
+      },
+      "edges": {
+        "cron->Get-patient-data-from-HIS": {
+          "enabled": true,
+          "id": "a471b315-53f7-4677-9994-18d757e75932",
+          "source_trigger_id": "35f555f0-e14c-4e61-b043-116f7de757bb",
+          "condition_type": "always",
+          "target_job_id": "4ef97c8e-8120-4239-83d0-37001ea411fb"
+        }
+      }
+    },
+    "dial-exchange": {
+      "id": "07f078c6-9aeb-4a50-ba10-3f82948f6f1f",
+      "name": "dial-exchange",
+      "inserted_at": "2023-05-15T11:20:24",
+      "updated_at": "2023-07-26T16:39:24",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "1a9ee64a-86b6-4664-92e7-f911ea85bed9",
+          "type": "cron",
+          "cron_expression": "0 0 * * *"
+        }
+      },
+      "jobs": {
+        "get-data-from-DHA": {
+          "id": "0a3ad8c9-f49e-4df3-a4c9-08866f13381c",
+          "name": "get data from DHA",
+          "body": "// get('/rfps', {});",
+          "adaptor": "@openfn/language-http@latest"
+        },
+        "coerce-to-DIAL-format": {
+          "id": "650840fb-84a1-4096-967d-2ca22f9e48e0",
+          "name": "coerce to DIAL format",
+          "body": "fn(state => {\n  console.log('input state', state);\n  // DO SOME CUSTOM SCRIPTING?!\n\n  console.log('output state', state);\n  return state;\n})",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "load-to-postgres": {
+          "id": "76d9f8d1-2036-4442-bfbd-4eff4fc5a625",
+          "name": "load to postgres",
+          "body": "// upsert('RFPS', 'uuid', {\n//   a: 1,\n//   close_date: state.data.date\n// });",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "try": {
+          "id": "1fdc17c4-8964-4849-af0a-eee861555205",
+          "name": "try",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@1.10.2"
+        }
+      },
+      "edges": {
+        "cron->get-data-from-DHA": {
+          "enabled": true,
+          "id": "89005267-fa35-477b-b80b-2025ca5e68da",
+          "source_trigger_id": "1a9ee64a-86b6-4664-92e7-f911ea85bed9",
+          "condition_type": "always",
+          "target_job_id": "0a3ad8c9-f49e-4df3-a4c9-08866f13381c"
+        },
+        "get-data-from-DHA->coerce-to-DIAL-format": {
+          "enabled": true,
+          "id": "cc6bdb88-de34-42ec-a320-9d30d0ff940a",
+          "source_job_id": "0a3ad8c9-f49e-4df3-a4c9-08866f13381c",
+          "condition_type": "on_job_success",
+          "target_job_id": "650840fb-84a1-4096-967d-2ca22f9e48e0"
+        },
+        "coerce-to-DIAL-format->load-to-postgres": {
+          "enabled": true,
+          "id": "44c11aff-f1e2-4872-9203-4c0a3b23226e",
+          "source_job_id": "650840fb-84a1-4096-967d-2ca22f9e48e0",
+          "condition_type": "on_job_success",
+          "target_job_id": "76d9f8d1-2036-4442-bfbd-4eff4fc5a625"
+        },
+        "get-data-from-DHA->try": {
+          "enabled": true,
+          "id": "7debdf65-ec66-4c31-91fa-2ddd0f8c5abe",
+          "source_job_id": "0a3ad8c9-f49e-4df3-a4c9-08866f13381c",
+          "condition_type": "on_job_success",
+          "target_job_id": "1fdc17c4-8964-4849-af0a-eee861555205"
+        }
+      }
+    },
+    "empty-lake-1753": {
+      "id": "2e27fe58-6632-49c4-b384-8aca57aa462d",
+      "name": "empty-lake-1753",
+      "inserted_at": "2023-07-10T17:10:36",
+      "updated_at": "2023-07-26T13:46:57",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": "2023-07-26T13:46:57Z",
+      "triggers": {},
+      "jobs": {},
+      "edges": {}
+    },
+    "Kobo-to-DHIS2": {
+      "id": "c12ca374-2a25-4275-a228-10e3c4ee12c5",
+      "name": "Kobo to DHIS2",
+      "inserted_at": "2024-02-12T09:39:48",
+      "updated_at": "2024-02-15T12:16:25",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": "2024-02-15T12:16:25Z",
+      "triggers": {
+        "webhook": {
+          "enabled": false,
+          "id": "0fca777e-ba9b-45b7-8998-e88f8f50ffd3",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Fetch-Form-Lists": {
+          "id": "dcdc4d71-c76e-44b2-8a5d-ef2570b71cbb",
+          "name": "Fetch Form Lists",
+          "body": "// Add users list to spreadsheet\n\nappendValues({\n  spreadsheetId: '1gT4cpHSDQp8A_JIX_5lqTLTwV0xBo_u8u3ZNWALmCLc',\n  range: 'Sheet1!A1:E1',\n  values: [\n    ['From expression', '$15', '2', '3/15/2016'],\n    ['Really now!', '$100', '1', '3/20/2016'],\n  ],\n})",
+          "adaptor": "@openfn/language-kobotoolbox@latest"
+        },
+        "Sync-": {
+          "id": "21e068db-263e-422b-8082-2f201774e70b",
+          "name": "Sync ",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-dhis2@latest"
+        }
+      },
+      "edges": {
+        "webhook->Fetch-Form-Lists": {
+          "enabled": true,
+          "id": "1b722d9c-15a1-4487-bc25-4ce97defdaac",
+          "source_trigger_id": "0fca777e-ba9b-45b7-8998-e88f8f50ffd3",
+          "condition_type": "always",
+          "target_job_id": "dcdc4d71-c76e-44b2-8a5d-ef2570b71cbb"
+        },
+        "Fetch-Form-Lists->Sync-": {
+          "enabled": true,
+          "id": "45dfb3ce-ee85-4710-9440-1c0feb7e1a86",
+          "source_job_id": "dcdc4d71-c76e-44b2-8a5d-ef2570b71cbb",
+          "condition_type": "on_job_success",
+          "target_job_id": "21e068db-263e-422b-8082-2f201774e70b"
+        }
+      }
+    },
+    "little-morning-6000": {
+      "id": "17ef4d14-aa13-47d4-aba0-7214b77575cc",
+      "name": "little-morning-6000",
+      "inserted_at": "2023-07-26T07:56:01",
+      "updated_at": "2023-07-26T13:47:08",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": "2023-07-26T13:47:08Z",
+      "triggers": {},
+      "jobs": {},
+      "edges": {}
+    },
+    "commcare-forms-to-openfn": {
+      "id": "8ef2d42d-cd09-4a72-b184-a0eb6a9b6881",
+      "name": "commcare forms-to-openfn",
+      "inserted_at": "2023-07-26T14:06:28",
+      "updated_at": "2024-02-21T11:11:58",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "webhook": {
+          "enabled": true,
+          "id": "2d8eeb42-216f-4828-bf9b-344e977034aa",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Filter-for-forms-we-want": {
+          "id": "e80b0420-bdde-476b-aa62-6923e5e28fc4",
+          "name": "Filter for forms we want",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@1.10.2"
+        },
+        "Send-to-Form1-WF": {
+          "id": "8dce778e-dae1-468f-8523-85c5d88b11cc",
+          "name": "Send to Form1 WF",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "Send-to-Form2-WF": {
+          "id": "8b0f8c33-3e34-45df-9ab1-e554dfc393f1",
+          "name": "Send to Form2 WF",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "Send-to-Form3-WF": {
+          "id": "93cc023a-19cb-4a15-94e8-1f98864d041b",
+          "name": "Send to Form3 WF",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@latest"
+        }
+      },
+      "edges": {
+        "webhook->Filter-for-forms-we-want": {
+          "enabled": true,
+          "id": "fbc7cf36-19b1-48e4-958b-3ed1344f7913",
+          "source_trigger_id": "2d8eeb42-216f-4828-bf9b-344e977034aa",
+          "condition_type": "on_job_success",
+          "target_job_id": "e80b0420-bdde-476b-aa62-6923e5e28fc4"
+        },
+        "Filter-for-forms-we-want->Send-to-Form1-WF": {
+          "enabled": true,
+          "id": "53922483-5025-463d-9b94-e0cfc7cf5d4c",
+          "source_job_id": "e80b0420-bdde-476b-aa62-6923e5e28fc4",
+          "condition_type": "on_job_success",
+          "target_job_id": "8dce778e-dae1-468f-8523-85c5d88b11cc"
+        },
+        "Filter-for-forms-we-want->Send-to-Form3-WF": {
+          "enabled": true,
+          "id": "c1d0f6d1-cfd6-4657-a921-904f80dd2813",
+          "source_job_id": "e80b0420-bdde-476b-aa62-6923e5e28fc4",
+          "condition_type": "on_job_success",
+          "target_job_id": "93cc023a-19cb-4a15-94e8-1f98864d041b"
+        },
+        "Filter-for-forms-we-want->Send-to-Form2-WF": {
+          "enabled": true,
+          "id": "2653b131-ca60-4b90-b87c-fd87db87a2a7",
+          "source_job_id": "e80b0420-bdde-476b-aa62-6923e5e28fc4",
+          "condition_type": "on_job_success",
+          "target_job_id": "8b0f8c33-3e34-45df-9ab1-e554dfc393f1"
+        }
+      }
+    },
+    "bc-to-aims-workflow": {
+      "id": "1807e325-93f6-4d57-a609-4c3ad05c1b25",
+      "name": "bc-to-aims-workflow",
+      "inserted_at": "2023-09-08T12:46:34",
+      "updated_at": "2024-02-12T11:22:17",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "c79c9ae2-84b1-4db7-a3a4-32927e9c8ed8",
+          "type": "cron",
+          "cron_expression": "00 02 15 * *"
+        }
+      },
+      "jobs": {
+        "Check-if-codes-exist": {
+          "id": "40956531-3cfa-49c9-b6ed-403a5a769d27",
+          "name": "Check if codes exist",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-salesforce@latest"
+        },
+        "Get-CSV-export-from-Sharepoint": {
+          "id": "206217e6-d1d0-46b3-8a6d-3f9e6e0dcf54",
+          "name": "Get CSV export from Sharepoint",
+          "body": "fn(state => { return state;})",
+          "adaptor": "@openfn/language-msgraph@latest"
+        },
+        "Log-exceptions-in-new-CSV": {
+          "id": "5daf2497-5ab5-4aab-be26-ae0c13f79e3b",
+          "name": "Log exceptions in new CSV",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-msgraph@latest"
+        },
+        "Import-cleaned-rows": {
+          "id": "02994b4a-c1dd-42d6-8a5d-2d9a3434ba2b",
+          "name": "Import cleaned rows",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-salesforce@latest"
+        }
+      },
+      "edges": {
+        "cron->Get-CSV-export-from-Sharepoint": {
+          "enabled": true,
+          "id": "2022ba73-6672-461f-b1ca-e03f412c673d",
+          "source_trigger_id": "c79c9ae2-84b1-4db7-a3a4-32927e9c8ed8",
+          "condition_type": "always",
+          "target_job_id": "206217e6-d1d0-46b3-8a6d-3f9e6e0dcf54"
+        },
+        "Get-CSV-export-from-Sharepoint->Check-if-codes-exist": {
+          "enabled": true,
+          "id": "ace6891f-0028-4850-b239-b87d2b5c9dc8",
+          "source_job_id": "206217e6-d1d0-46b3-8a6d-3f9e6e0dcf54",
+          "condition_type": "on_job_success",
+          "target_job_id": "40956531-3cfa-49c9-b6ed-403a5a769d27"
+        },
+        "Check-if-codes-exist->Log-exceptions-in-new-CSV": {
+          "enabled": true,
+          "id": "b87c1190-76b4-47c8-b14e-997bd3be5355",
+          "source_job_id": "40956531-3cfa-49c9-b6ed-403a5a769d27",
+          "condition_type": "on_job_success",
+          "target_job_id": "5daf2497-5ab5-4aab-be26-ae0c13f79e3b"
+        },
+        "Check-if-codes-exist->Import-cleaned-rows": {
+          "enabled": true,
+          "id": "37283a7a-91d5-491d-937d-3ee7dfeca172",
+          "source_job_id": "40956531-3cfa-49c9-b6ed-403a5a769d27",
+          "condition_type": "on_job_success",
+          "target_job_id": "02994b4a-c1dd-42d6-8a5d-2d9a3434ba2b"
+        }
+      }
+    },
+    "kobo-forms-to-dhis2": {
+      "id": "84b61721-60b3-4246-8e61-eb7827e43064",
+      "name": "kobo forms-to-dhis2",
+      "inserted_at": "2023-09-08T13:28:34",
+      "updated_at": "2024-02-10T13:22:42",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "c4a37105-e2f3-4158-a0b6-4a2a4ce8ad8e",
+          "type": "cron",
+          "cron_expression": "0 0 * * *"
+        }
+      },
+      "jobs": {
+        "Clean-and-map-data": {
+          "id": "0ed74cd9-491a-4b32-81b7-84b4b2533b50",
+          "name": "Clean and map data",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@latest"
+        },
+        "Get-new-forms": {
+          "id": "18719d56-7b96-4f8c-af71-3d0363bd1720",
+          "name": "Get new forms",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-kobotoolbox@latest"
+        },
+        "Upsert-Tracked-Entities": {
+          "id": "252d8e2f-5f04-4a98-b33f-f9c596baf268",
+          "name": "Upsert Tracked Entities",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-dhis2@latest"
+        }
+      },
+      "edges": {
+        "Clean-and-map-data->Upsert-Tracked-Entities": {
+          "enabled": true,
+          "id": "1439bf9f-fcf9-4414-804e-e5d2af0713a4",
+          "source_job_id": "0ed74cd9-491a-4b32-81b7-84b4b2533b50",
+          "condition_type": "on_job_success",
+          "target_job_id": "252d8e2f-5f04-4a98-b33f-f9c596baf268"
+        },
+        "Get-new-forms->Clean-and-map-data": {
+          "enabled": true,
+          "id": "32491561-af92-4b37-8a30-e1f81e53d4d0",
+          "source_job_id": "18719d56-7b96-4f8c-af71-3d0363bd1720",
+          "condition_type": "on_job_success",
+          "target_job_id": "0ed74cd9-491a-4b32-81b7-84b4b2533b50"
+        },
+        "cron->Get-new-forms": {
+          "enabled": true,
+          "id": "d9b394cc-36ad-4fc9-b226-c6c01c689bc0",
+          "source_trigger_id": "c4a37105-e2f3-4158-a0b6-4a2a4ce8ad8e",
+          "condition_type": "always",
+          "target_job_id": "18719d56-7b96-4f8c-af71-3d0363bd1720"
+        }
+      }
+    },
+    "patient-updates-test": {
+      "id": "40456bf6-1e98-4d12-8140-3e720ea6ecac",
+      "name": "patient-updates test",
+      "inserted_at": "2023-09-26T15:39:42",
+      "updated_at": "2024-02-10T13:21:35",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "webhook": {
+          "enabled": true,
+          "id": "57baf4f4-0bc5-4c6b-be69-dd0ccccee860",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "expression": {
+          "id": "2f4996cb-c8d2-461e-b777-b2347796129a",
+          "name": "expression",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-common@latest"
+        }
+      },
+      "edges": {
+        "webhook->expression": {
+          "enabled": true,
+          "id": "17b067e8-6c25-4251-98be-66987a2e6d60",
+          "source_trigger_id": "57baf4f4-0bc5-4c6b-be69-dd0ccccee860",
+          "condition_type": "always",
+          "target_job_id": "2f4996cb-c8d2-461e-b777-b2347796129a"
+        }
+      }
+    },
+    "contact-registration": {
+      "id": "b47206f6-9f04-413e-aadd-ea49ff149ea4",
+      "name": "contact-registration",
+      "inserted_at": "2024-02-05T06:06:30",
+      "updated_at": "2024-02-10T13:21:18",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "webhook": {
+          "enabled": true,
+          "id": "d6de7bb2-657c-4a6b-9b6a-b4cded3b7791",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "New-job": {
+          "id": "9b784c9e-ed13-403d-9ec6-b75cd7f618d0",
+          "name": "New job",
+          "body": "// Get started by adding operations from the API reference\nput('https://api.restful-api.dev/objects/ff8081818d6670fb018d78a7a9491087', {\n  headers: {'content-type': 'application/json'},\n  body: state.data\n})",
+          "adaptor": "@openfn/language-http@latest"
+        }
+      },
+      "edges": {
+        "webhook->New-job": {
+          "enabled": true,
+          "id": "fd5a187a-7e88-49dd-946d-ebf56b3ca326",
+          "source_trigger_id": "d6de7bb2-657c-4a6b-9b6a-b4cded3b7791",
+          "condition_type": "always",
+          "target_job_id": "9b784c9e-ed13-403d-9ec6-b75cd7f618d0"
+        }
+      }
+    },
+    "Sync-Users-List": {
+      "id": "46936e38-b4db-4355-85dc-127fe9364b3c",
+      "name": "Sync Users List",
+      "inserted_at": "2024-02-12T08:36:43",
+      "updated_at": "2024-02-13T07:13:07",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "6e145b0b-c7cf-4652-9363-5072f6e1f643",
+          "type": "cron",
+          "cron_expression": "0 0 * * *"
+        }
+      },
+      "jobs": {
+        "Fetch-Users": {
+          "id": "b94da279-fa41-4fa6-9540-a574b5e59ef2",
+          "name": "Fetch Users",
+          "body": "// Fetch Users\n\nget(\"users\" )",
+          "adaptor": "@openfn/language-http@latest"
+        },
+        "Sync-Users": {
+          "id": "27e94dd5-0dbe-4d81-b924-5b0684de9308",
+          "name": "Sync Users",
+          "body": "// Users Data Model\nfn(state => {\n\n  const users = state.data.map(({ id, name, username, address, phone, website, company }) => [id, name, username, address.city, phone, website, company.name]);\n\n  return { ...state, users }\n})\n\n// Append User to Sheet\nappendValues({\n  spreadsheetId: '1gT4cpHSDQp8A_JIX_5lqTLTwV0xBo_u8u3ZNWALmCLc',\n  range: 'users!A1:G1',\n  values: state => state.users,\n})",
+          "adaptor": "@openfn/language-googlesheets@2.2.2"
+        }
+      },
+      "edges": {
+        "cron->Fetch-Users": {
+          "enabled": true,
+          "id": "bab60935-3ef5-44ed-88ce-0a9e231b891f",
+          "source_trigger_id": "6e145b0b-c7cf-4652-9363-5072f6e1f643",
+          "condition_type": "always",
+          "target_job_id": "b94da279-fa41-4fa6-9540-a574b5e59ef2"
+        },
+        "Fetch-Users->Sync-Users": {
+          "enabled": true,
+          "id": "872759e8-7624-4c5b-a9ed-9129abb8d816",
+          "source_job_id": "b94da279-fa41-4fa6-9540-a574b5e59ef2",
+          "condition_type": "on_job_success",
+          "target_job_id": "27e94dd5-0dbe-4d81-b924-5b0684de9308"
+        }
+      }
+    },
+    "ss-sync-payments": {
+      "id": "ab7b1715-3fbb-499c-8c22-e075c6fa66e2",
+      "name": "ss-sync-payments",
+      "inserted_at": "2024-02-15T14:44:54",
+      "updated_at": "2024-02-15T15:37:13",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "5eb8a716-8938-4ccb-ae5e-3bae261fff3b",
+          "type": "cron",
+          "cron_expression": "00 * * * *"
+        }
+      },
+      "jobs": {
+        "Get-payments": {
+          "id": "c1ee85bc-d9f7-4844-8159-2fea7d77cd19",
+          "name": "Get payments",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-http@latest"
+        },
+        "Import-to-Salesforce": {
+          "id": "194ef833-33f2-4725-91cf-55e82a2677be",
+          "name": "Import to Salesforce",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-salesforce@latest"
+        }
+      },
+      "edges": {
+        "Get-payments->Import-to-Salesforce": {
+          "enabled": true,
+          "id": "9d8240da-de04-4252-86a2-14f315cac420",
+          "source_job_id": "c1ee85bc-d9f7-4844-8159-2fea7d77cd19",
+          "condition_type": "on_job_success",
+          "target_job_id": "194ef833-33f2-4725-91cf-55e82a2677be"
+        },
+        "cron->Get-payments": {
+          "enabled": true,
+          "id": "216a1952-5774-4bda-bafb-1475ea426962",
+          "source_trigger_id": "5eb8a716-8938-4ccb-ae5e-3bae261fff3b",
+          "condition_type": "always",
+          "target_job_id": "c1ee85bc-d9f7-4844-8159-2fea7d77cd19"
+        }
+      }
+    },
+    "sync-website-form": {
+      "id": "3e1f918b-f2e3-4976-aec9-02c608f24155",
+      "name": "sync-website-form",
+      "inserted_at": "2024-03-01T13:20:46",
+      "updated_at": "2024-03-01T13:31:08",
+      "project_id": "57862287-23e6-4650-8d79-e1dd88b24b1c",
+      "deleted_at": null,
+      "triggers": {
+        "webhook": {
+          "enabled": true,
+          "id": "00410779-bd64-4d46-84c1-b056a41bbb8b",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Get-forms": {
+          "id": "f259ebe1-60bb-40ae-b2e1-c3a7081abd27",
+          "name": "Get forms",
+          "body": "// Get started by adding operations from the API reference\n",
+          "adaptor": "@openfn/language-http@latest"
+        },
+        "Import-to-SF": {
+          "id": "b1334827-7495-42a1-8ee6-65ddd907746c",
+          "name": "Import to SF",
+          "body": "// Get started by adding operations from the API reference\ncreate('obj_name', {\n  attr1: \"foo\",\n  attr2: \"bar\"\n})",
+          "adaptor": "@openfn/language-salesforce@latest"
+        }
+      },
+      "edges": {
+        "webhook->Get-forms": {
+          "enabled": true,
+          "id": "c47280e9-22d6-4a05-b3b7-b9dd1769671e",
+          "source_trigger_id": "00410779-bd64-4d46-84c1-b056a41bbb8b",
+          "condition_type": "always",
+          "target_job_id": "f259ebe1-60bb-40ae-b2e1-c3a7081abd27"
+        },
+        "Get-forms->Import-to-SF": {
+          "enabled": true,
+          "id": "c6bf0cc8-0313-42b7-8256-53a2f8c76d11",
+          "source_job_id": "f259ebe1-60bb-40ae-b2e1-c3a7081abd27",
+          "condition_type": "on_job_success",
+          "target_job_id": "b1334827-7495-42a1-8ee6-65ddd907746c"
+        }
+      }
+    }
+  }
+}

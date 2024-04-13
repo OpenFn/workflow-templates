@@ -1,0 +1,589 @@
+name: demo-project
+description: for ak
+# credentials:
+# globals:
+workflows:
+  Kobo-to-DHIS2:
+    name: Kobo-to-DHIS2
+    jobs:
+      Get-Kobo-Form-Submission:
+        name: Get Kobo Form Submission
+        adaptor: '@openfn/language-kobotoolbox@latest'
+        # credential:
+        # globals:
+        body: |
+          
+          //TODO: get submissions with form id aBpweTNdaGJQFb5EBBwUeo
+          //NOTE: This should return ~5 Kobo forms
+          //Q: Can we use Kobo adaptor? Or must we use http?
+          
+          getSubmissions({ formId: "aBpweTNdaGJQFb5EBBwUeo" })
+          
+          
+      Count-OPV-Dose-Given:
+        name: Count OPV Dose Given
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          //TODO: we should clean the Kobo forms and aggregate to calculate data value results
+          //See example: https://github.com/OpenFn/training/blob/main/examples/2.createDataValues.js#L2-L19
+          
+          fn(state => {
+            const opvDosesGivenCount = state.data.results.filter(
+              r => r['OPV0_dose_given'] === 'yes'
+            ).length;
+            
+            return { ...state, opvDosesGivenCount };
+          });
+          
+          
+      Map-and-Load-to-DHIS2:
+        name: Map and Load to DHIS2
+        adaptor: '@openfn/language-dhis2@latest'
+        # credential:
+        # globals:
+        body: |
+          // Import to DHIS2
+          create('dataValueSets', state => ({
+            dataSet: 'BfMAe6Itzgt', // Child Health
+            period: '202402', // Feb 2024
+            orgUnit: 'DiszpKrYNg8', // Ngelehun CHC
+            dataValues: [
+              {
+                categoryOptionCombo: 'Prlt0C1RF0s', //Fixed <1yr
+                dataElement: 'x3Do5e7g4Qo', // OPV0 doses given 
+                value: state.opvDosesGivenCount, //# of OPV0 doses given
+              },
+            ],
+          }));
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '0 0 * * *'
+        enabled: true
+    edges:
+      cron->Get-Kobo-Form-Submission:
+        source_trigger: cron
+        target_job: Get-Kobo-Form-Submission
+        condition_type: always
+        enabled: true
+      Get-Kobo-Form-Submission->Count-OPV-Dose-Given:
+        source_job: Get-Kobo-Form-Submission
+        target_job: Count-OPV-Dose-Given
+        condition_type: on_job_success
+        enabled: true
+      Count-OPV-Dose-Given->Map-and-Load-to-DHIS2:
+        source_job: Count-OPV-Dose-Given
+        target_job: Map-and-Load-to-DHIS2
+        condition_type: on_job_success
+        enabled: true
+  OpenMRS-to-DHIS2:
+    name: OpenMRS-to-DHIS2
+    jobs:
+      Fetch-OpenMRS-data:
+        name: Fetch OpenMRS data
+        adaptor: '@openfn/language-openmrs@2.0.8'
+        # credential:
+        # globals:
+        body: |
+          fn(state => state);
+          
+      Convert-to-FHIR-patient-data-standard:
+        name: Convert to FHIR patient data standard
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+      Load-to-national-DHIS2-system:
+        name: Load to national DHIS2 system
+        adaptor: '@openfn/language-dhis2@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+          fn(state => {
+              console.log("Logging in to DHIS2...")
+              console.log("Upserting anonymized patient data...")
+              console.log("Updating clinics and clinic report dates...")
+              return state;
+          })
+      Add-to-COVID-19-hotspot-map:
+        name: Add to COVID-19 hotspot map
+        adaptor: '@openfn/language-cartodb@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+      Notify-clinic-admin-for-retry:
+        name: Notify clinic admin for retry
+        adaptor: '@openfn/language-twilio@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+      Request-shipments-for-low-stock-items-at-clinic:
+        name: Request shipments for low stock items at clinic
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '07 * * * *'
+        enabled: true
+    edges:
+      cron->Fetch-OpenMRS-data:
+        source_trigger: cron
+        target_job: Fetch-OpenMRS-data
+        condition_type: always
+        enabled: true
+      Fetch-OpenMRS-data->Convert-to-FHIR-patient-data-standard:
+        source_job: Fetch-OpenMRS-data
+        target_job: Convert-to-FHIR-patient-data-standard
+        condition_type: on_job_success
+        enabled: true
+      Convert-to-FHIR-patient-data-standard->Load-to-national-DHIS2-system:
+        source_job: Convert-to-FHIR-patient-data-standard
+        target_job: Load-to-national-DHIS2-system
+        condition_type: on_job_success
+        enabled: true
+      Convert-to-FHIR-patient-data-standard->Add-to-COVID-19-hotspot-map:
+        source_job: Convert-to-FHIR-patient-data-standard
+        target_job: Add-to-COVID-19-hotspot-map
+        condition_type: on_job_success
+        enabled: true
+      Load-to-national-DHIS2-system->Notify-clinic-admin-for-retry:
+        source_job: Load-to-national-DHIS2-system
+        target_job: Notify-clinic-admin-for-retry
+        condition_type: on_job_failure
+        enabled: true
+      Load-to-national-DHIS2-system->Request-shipments-for-low-stock-items-at-clinic:
+        source_job: Load-to-national-DHIS2-system
+        target_job: Request-shipments-for-low-stock-items-at-clinic
+        condition_type: on_job_success
+        enabled: true
+  Sync-HIS-data:
+    name: Sync HIS data
+    jobs:
+      Get-patient-data-from-HIS:
+        name: Get patient data from HIS
+        adaptor: '@openfn/language-postgresql@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from your adaptor here
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '00 06 * * *'
+        enabled: true
+    edges:
+      cron->Get-patient-data-from-HIS:
+        source_trigger: cron
+        target_job: Get-patient-data-from-HIS
+        condition_type: always
+        enabled: true
+  Sync-Users-List:
+    name: Sync Users List
+    jobs:
+      Fetch-Users:
+        name: Fetch Users
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // Fetch Users
+          
+          get("users" )
+      Sync-Users:
+        name: Sync Users
+        adaptor: '@openfn/language-googlesheets@2.2.2'
+        # credential:
+        # globals:
+        body: |
+          // Users Data Model
+          fn(state => {
+          
+            const users = state.data.map(({ id, name, username, address, phone, website, company }) => [id, name, username, address.city, phone, website, company.name]);
+          
+            return { ...state, users }
+          })
+          
+          // Append User to Sheet
+          appendValues({
+            spreadsheetId: '1gT4cpHSDQp8A_JIX_5lqTLTwV0xBo_u8u3ZNWALmCLc',
+            range: 'users!A1:G1',
+            values: state => state.users,
+          })
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '0 0 * * *'
+        enabled: true
+    edges:
+      cron->Fetch-Users:
+        source_trigger: cron
+        target_job: Fetch-Users
+        condition_type: always
+        enabled: true
+      Fetch-Users->Sync-Users:
+        source_job: Fetch-Users
+        target_job: Sync-Users
+        condition_type: on_job_success
+        enabled: true
+  bc-to-aims-workflow:
+    name: bc-to-aims-workflow
+    jobs:
+      Check-if-codes-exist:
+        name: Check if codes exist
+        adaptor: '@openfn/language-salesforce@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Get-CSV-export-from-Sharepoint:
+        name: Get CSV export from Sharepoint
+        adaptor: '@openfn/language-msgraph@latest'
+        # credential:
+        # globals:
+        body: |
+          fn(state => { return state;})
+      Log-exceptions-in-new-CSV:
+        name: Log exceptions in new CSV
+        adaptor: '@openfn/language-msgraph@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Import-cleaned-rows:
+        name: Import cleaned rows
+        adaptor: '@openfn/language-salesforce@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '00 02 15 * *'
+        enabled: true
+    edges:
+      cron->Get-CSV-export-from-Sharepoint:
+        source_trigger: cron
+        target_job: Get-CSV-export-from-Sharepoint
+        condition_type: always
+        enabled: true
+      Get-CSV-export-from-Sharepoint->Check-if-codes-exist:
+        source_job: Get-CSV-export-from-Sharepoint
+        target_job: Check-if-codes-exist
+        condition_type: on_job_success
+        enabled: true
+      Check-if-codes-exist->Log-exceptions-in-new-CSV:
+        source_job: Check-if-codes-exist
+        target_job: Log-exceptions-in-new-CSV
+        condition_type: on_job_success
+        enabled: true
+      Check-if-codes-exist->Import-cleaned-rows:
+        source_job: Check-if-codes-exist
+        target_job: Import-cleaned-rows
+        condition_type: on_job_success
+        enabled: true
+  commcare-forms-to-openfn:
+    name: commcare forms-to-openfn
+    jobs:
+      Filter-for-forms-we-want:
+        name: Filter for forms we want
+        adaptor: '@openfn/language-common@1.10.2'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Send-to-Form1-WF:
+        name: Send to Form1 WF
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Send-to-Form2-WF:
+        name: Send to Form2 WF
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Send-to-Form3-WF:
+        name: Send to Form3 WF
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->Filter-for-forms-we-want:
+        source_trigger: webhook
+        target_job: Filter-for-forms-we-want
+        condition_type: on_job_success
+        enabled: true
+      Filter-for-forms-we-want->Send-to-Form1-WF:
+        source_job: Filter-for-forms-we-want
+        target_job: Send-to-Form1-WF
+        condition_type: on_job_success
+        enabled: true
+      Filter-for-forms-we-want->Send-to-Form3-WF:
+        source_job: Filter-for-forms-we-want
+        target_job: Send-to-Form3-WF
+        condition_type: on_job_success
+        enabled: true
+      Filter-for-forms-we-want->Send-to-Form2-WF:
+        source_job: Filter-for-forms-we-want
+        target_job: Send-to-Form2-WF
+        condition_type: on_job_success
+        enabled: true
+  contact-registration:
+    name: contact-registration
+    jobs:
+      New-job:
+        name: New job
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          put('https://api.restful-api.dev/objects/ff8081818d6670fb018d78a7a9491087', {
+            headers: {'content-type': 'application/json'},
+            body: state.data
+          })
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->New-job:
+        source_trigger: webhook
+        target_job: New-job
+        condition_type: always
+        enabled: true
+  dial-exchange:
+    name: dial-exchange
+    jobs:
+      get-data-from-DHA:
+        name: get data from DHA
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // get('/rfps', {});
+      coerce-to-DIAL-format:
+        name: coerce to DIAL format
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          fn(state => {
+            console.log('input state', state);
+            // DO SOME CUSTOM SCRIPTING?!
+          
+            console.log('output state', state);
+            return state;
+          })
+      load-to-postgres:
+        name: load to postgres
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // upsert('RFPS', 'uuid', {
+          //   a: 1,
+          //   close_date: state.data.date
+          // });
+      try:
+        name: try
+        adaptor: '@openfn/language-common@1.10.2'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '0 0 * * *'
+        enabled: true
+    edges:
+      cron->get-data-from-DHA:
+        source_trigger: cron
+        target_job: get-data-from-DHA
+        condition_type: always
+        enabled: true
+      get-data-from-DHA->coerce-to-DIAL-format:
+        source_job: get-data-from-DHA
+        target_job: coerce-to-DIAL-format
+        condition_type: on_job_success
+        enabled: true
+      coerce-to-DIAL-format->load-to-postgres:
+        source_job: coerce-to-DIAL-format
+        target_job: load-to-postgres
+        condition_type: on_job_success
+        enabled: true
+      get-data-from-DHA->try:
+        source_job: get-data-from-DHA
+        target_job: try
+        condition_type: on_job_success
+        enabled: true
+  kobo-forms-to-dhis2:
+    name: kobo forms-to-dhis2
+    jobs:
+      Get-new-forms:
+        name: Get new forms
+        adaptor: '@openfn/language-kobotoolbox@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Clean-and-map-data:
+        name: Clean and map data
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Upsert-Tracked-Entities:
+        name: Upsert Tracked Entities
+        adaptor: '@openfn/language-dhis2@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '0 0 * * *'
+        enabled: true
+    edges:
+      cron->Get-new-forms:
+        source_trigger: cron
+        target_job: Get-new-forms
+        condition_type: always
+        enabled: true
+      Get-new-forms->Clean-and-map-data:
+        source_job: Get-new-forms
+        target_job: Clean-and-map-data
+        condition_type: on_job_success
+        enabled: true
+      Clean-and-map-data->Upsert-Tracked-Entities:
+        source_job: Clean-and-map-data
+        target_job: Upsert-Tracked-Entities
+        condition_type: on_job_success
+        enabled: true
+  patient-updates-test:
+    name: patient-updates test
+    jobs:
+      expression:
+        name: expression
+        adaptor: '@openfn/language-common@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->expression:
+        source_trigger: webhook
+        target_job: expression
+        condition_type: always
+        enabled: true
+  ss-sync-payments:
+    name: ss-sync-payments
+    jobs:
+      Get-payments:
+        name: Get payments
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Import-to-Salesforce:
+        name: Import to Salesforce
+        adaptor: '@openfn/language-salesforce@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '00 * * * *'
+        enabled: true
+    edges:
+      cron->Get-payments:
+        source_trigger: cron
+        target_job: Get-payments
+        condition_type: always
+        enabled: true
+      Get-payments->Import-to-Salesforce:
+        source_job: Get-payments
+        target_job: Import-to-Salesforce
+        condition_type: on_job_success
+        enabled: true
+  sync-website-form:
+    name: sync-website-form
+    jobs:
+      Get-forms:
+        name: Get forms
+        adaptor: '@openfn/language-http@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          
+      Import-to-SF:
+        name: Import to SF
+        adaptor: '@openfn/language-salesforce@latest'
+        # credential:
+        # globals:
+        body: |
+          // Get started by adding operations from the API reference
+          create('obj_name', {
+            attr1: "foo",
+            attr2: "bar"
+          })
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->Get-forms:
+        source_trigger: webhook
+        target_job: Get-forms
+        condition_type: always
+        enabled: true
+      Get-forms->Import-to-SF:
+        source_job: Get-forms
+        target_job: Import-to-SF
+        condition_type: on_job_success
+        enabled: true
